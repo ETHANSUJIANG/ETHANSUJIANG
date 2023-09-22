@@ -959,23 +959,15 @@ class RawMaterial:
 
 # df_final.to_excel('data/P7000094258-26_final.xlsx',index=False)
 
-# =============================================================================
-# country_number = list(set(df_externalcost['VENDOR_COUNTRY']))
-# country_number.remove('nan')
-# process = ['ASSY','FORGING', 'MACHINING', 'OEM_METAL', 'OEM_NONMETAL', 'CASTING',
-#        'CHEMICAL', 'CLADDING', 'FABRICATION', 'COATING']
-# arr = np.around(np.random.uniform(low=.5,high =6,size=(len(country_number),10)),2)
-# EF_table = pd.DataFrame(data= arr,index=country_number,columns=process)
-# ASSY = np.around(np.random.uniform(0.3,1,size =29),2)
-# Coating = np.around(np.random.uniform(0.2,.5,29),2)
-# EF_table['ASSY']=ASSY
-# EF_table['COATING']=Coating
-# EF_table.insert(loc=10,value= 4.018,column='RAW_METAL')
-# EF_table.insert(loc=10,value= 3.116,column='RAW_NONMETAL')
-# EF_table.to_excel('data/EF.xlsx')
-# EF_table.columns
-# 
-# =============================================================================
+# the class assign each of BOM item purchased vendor country and city '
+# also topleve PN production site
+
+class MfgLocation:
+    @staticmethod
+    def topLevelpn(data:pd.DataFrame):
+        location = list(set(data['COUNTRY_CODE']))
+
+
 
 class ProcesEF:
     @staticmethod
