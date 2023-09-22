@@ -973,6 +973,7 @@ class MfgLocation:
         for i,j in enumerate(data1['PART']):
             country = data1[data1['PART']==j]['VENDOR_COUNTRY'].tolist()
             coty_uni = list(filter(None,country))
+            coty_uni.insert(0,coty_uni)
             for k in range(len(coty_uni)):
                 df.loc[i,('COTY'+str(k))]=coty_uni
         df.loc[len(df)]=plant_coty
