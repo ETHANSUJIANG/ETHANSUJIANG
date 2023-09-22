@@ -9,7 +9,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import warnings
 import snowflake.connector
-import sys
+import sys,re
 import os
 warnings.filterwarnings('ignore')
 
@@ -21,7 +21,8 @@ class LoadingData:
         path = os.path.join(path,PN)
         data = pd.read_excel(path)
         EF_PR = EF_PR = pd.read_excel(r'C:\Users\zhusj\python\Input_data\TFMC/EF_vendor_region.xlsx')
-        return data,EF_PR
+        EF_Trans = pd.read_excel(r'C:\Users\zhusj\python\Input_data\TFMC\Air_Ocea_Road.xlsx')
+        return data,EF_PR,EF_Trans
 # data = pd.read_excel('data/P1000220410.xlsx')# read BOM data
 # EF_PR = pd.read_excel('data/EF_vendor_region.xlsx')
 # data, EFe= LoadingData.LoadingData('P7000073756')
@@ -348,34 +349,9 @@ class StrIsolate:
     # def __init__(self,string):
     #     self.string = string
     def split(self,string):
-        setA = set()
-        if len(string)<=1:
-            pass
-        elif len (string)>=2:
-            strA= string.split()
-            for i in strA:
-                if len(i)<=1:
-                    pass
-                else:
-                    a = i.split(sep=',')
-                    for j in a:
-                        if len(j)<4:
-                            pass
-                        elif len(j)>4 :
-                            setA.add(j)
-                    b = i.split(sep=':')
-                    for k in b:
-                        if len(k)<4:
-                            pass
-                        elif len(k)>4:
-                            setA.add(k)
-                    c = i.split(sep='/')
-                    for l in c:
-                        if len(l)<4:
-                            pass
-                        elif len(l)>4:
-                            setA.add(l)
-        return setA
+        strall = re.split(r'[,; /]',string)
+        strset = set(strall)
+        return strset
 
 # class to recognize each of PN in which mfg process 
 class ProcessIdentify:
@@ -1052,7 +1028,7 @@ def decorator(fun):
 
 if __name__== '__main__':
     PN = 'P1000220410'
-    data, EFe= LoadingData.LoadingData(PN)
+    data, EFe,EF_Transport= LoadingData.LoadingData(PN)
     # read data from loacal iBOM and emission factor table
     EFe = GetEF.getEF(EFe)
     # create EFe dict ignore the region currently
