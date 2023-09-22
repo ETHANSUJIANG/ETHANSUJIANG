@@ -964,11 +964,20 @@ class RawMaterial:
 
 class MfgLocation:
     @staticmethod
-    def topLevelpn(data:pd.DataFrame):
-        location = list(set(data['COUNTRY_CODE']))
-
-
-
+    def sourcingPN(data0:pd.DataFrame,data1:pd.DataFrame)->pd.DataFrame:
+        location = list(set(data0['COUNTRY_CODE']))
+        plant_coty = list(filter(None,location))
+        toplevelpn= data0['PN0'][0]
+        plant_coty.insert(0,toplevelpn)
+        df = pd.DataFrame()
+        for i,j in enumerate(data1['PART']):
+            country = data1[data1['PART']==j]['VENDOR_COUNTRY'].tolist()
+            coty_uni = list(filter(None,country))
+            for k in range(len(coty_uni)):
+                df.loc[i,('COTY'+str(k))]=coty_uni
+        df.loc[len(df)]=plant_coty
+        return df
+    
 class ProcesEF:
     @staticmethod
     def procesEF(data,EFe):
