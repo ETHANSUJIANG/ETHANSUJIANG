@@ -971,14 +971,13 @@ class MfgLocation:
         plant_coty.insert(0,toplevelpn)
         df = pd.DataFrame()
         for i,j in enumerate(data1['PART']):
-            country = data1[data1['PART']==j]['VENDOR_COUNTRY'].tolist()
+            country = set(data1[data1['PART']==j]['VENDOR_COUNTRY'].tolist())
             coty_uni = list(filter(None,country))
-            coty_uni.insert(0,coty_uni)
             for k in range(len(coty_uni)):
-                df.loc[i,('COTY'+str(k))]=coty_uni
+                df.loc[i,'PN']=j
+                df.loc[i,('COTY'+str(k))]=coty_uni[k]
         df.loc[len(df)]=plant_coty
         return df
-    
 class ProcesEF:
     @staticmethod
     def procesEF(data,EFe):
@@ -1029,7 +1028,7 @@ def decorator(fun):
 
 
 if __name__== '__main__':
-    PN = 'P1000220410'
+    PN = 'P4000098305'
     data, EFe,EF_Transport= LoadingData.LoadingData(PN)
     # read data from loacal iBOM and emission factor table
     EFe = GetEF.getEF(EFe)
@@ -1038,6 +1037,7 @@ if __name__== '__main__':
     data0 =DataClear.dataClear(data)
     description = data0['PART DESCRIPTION'][0][:35]
     df_toplevelpn,df_purchased,df_production= queryData(data0,PN=PN)
+    df_PN_loction = MfgLocation.sourcingPN(df_production,df_purchased)
     # clear the iBOM data drop nan value
     df_toplevelpn =DFClear.dfClear(df_toplevelpn)
     # clear data convert each of column data into str type
