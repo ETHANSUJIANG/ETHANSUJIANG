@@ -970,12 +970,14 @@ class MfgLocation:
         toplevelpn= data0['PN0'][0]
         plant_coty.insert(0,toplevelpn)
         df = pd.DataFrame()
-        for i,j in enumerate(data1['PART']):
+        PNs = data1['PART'].unique().tolist()
+        for i,j in enumerate(PNs):
             country = set(data1[data1['PART']==j]['VENDOR_COUNTRY'].tolist())
             coty_uni = list(filter(None,country))
-            for k in range(len(coty_uni)):
-                df.loc[i,'PN']=j
-                df.loc[i,('COTY'+str(k))]=coty_uni[k]
+            df.loc[i,'PN']=j
+            df.loc[i,'Default_country']=coty_uni[0]
+            df.loc[i,'Vendor_qty']=len(coty_uni)
+            df.loc[i,'Option']=coty_uni
         if len(df[df['PN']==toplevelpn])==0:
             df.loc[len(df)]=plant_coty
         else:
