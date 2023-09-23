@@ -976,7 +976,10 @@ class MfgLocation:
             for k in range(len(coty_uni)):
                 df.loc[i,'PN']=j
                 df.loc[i,('COTY'+str(k))]=coty_uni[k]
-        df.loc[len(df)]=plant_coty
+        if len(df[df['PN']==toplevelpn])==0:
+            df.loc[len(df)]=plant_coty
+        else:
+            df[df[df['PN']==toplevelpn]].iloc[0,1:]=plant_coty[1:]
         return df
 class ProcesEF:
     @staticmethod
