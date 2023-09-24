@@ -1000,6 +1000,31 @@ class ProcesEF:
 
 # Final_df = ProcesEF.procesEF(df_final, EFe)
 # Final_df.to_excel('data/fi_df.xlsx',index =False)
+class TransEmission:
+    @staticmethod
+    def transCal(source:pd.DataFrame,target:pd.DataFrame,EF_Trans,plant_ixd=0,vendor_ixd=0):
+        lth = source.shape[1]
+        for i,j in enumerate(source['PART']):
+            if i ==0:
+                coty = target[target['PN']==j]['PN'].tolist()
+                if plant_ixd <=(len(coty)-1):
+                    source['TFMC_plant_country']=coty[plant_ixd]
+                else:
+                    source['TFMC_plant_country']=coty[0]
+                source.loc[i,'Vendor_coty']=source['TFMC_plant_country'][0]
+            else:
+                coty = target[target['PN']==j]['PN'].tolist()
+                if len(coty)==0:
+                    source.loc[i,'Vendor_coty']=''
+                elif vendor_ixd<=(len(coty)-1):
+                    source.loc[i,'Vendor_coty']=coty[vendor_ixd]
+                else:
+                    source.loc[i,'Vendor_coty']=coty[0]
+            
+            
+        
+
+
 
 
 def emissionSum(data):
