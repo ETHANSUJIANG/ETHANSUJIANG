@@ -21,7 +21,10 @@ class LoadingData:
         path = os.path.join(path,PN)
         data = pd.read_excel(path)
         EF_PR = EF_PR = pd.read_excel(r'C:\Users\zhusj\python\Input_data\TFMC/EF_vendor_region.xlsx')
-        EF_Trans = pd.read_excel(r'C:\Users\zhusj\python\Input_data\TFMC\Air_Ocea_Road.xlsx')
+        dfs = pd.read_excel(r'C:\Users\zhusj\python\Input_data\TFMC\Air_Ocea_Road.xlsx',sheet_name=None)
+        road,sea,air,EF= dfs.parse(sheet_name='Roaddistance'),dfs.parse(sheet_name='Seadistance')\
+                        ,dfs.parse(sheet_name='Airportdistance'),dfs.parse(sheet_name='EF')
+        EF_Trans ={'Road':road,'Sea':sea,'Air':air,'EF':EF}
         return data,EF_PR,EF_Trans
 # data = pd.read_excel('data/P1000220410.xlsx')# read BOM data
 # EF_PR = pd.read_excel('data/EF_vendor_region.xlsx')
