@@ -968,20 +968,21 @@ class MfgLocation:
         location = list(set(data0['COUNTRY_CODE']))
         plant_coty = list(filter(None,location))
         toplevelpn= data0['PN0'][0]
-        plant_coty.insert(0,toplevelpn)
         df = pd.DataFrame()
         PNs = data1['PART'].unique().tolist()
         for i,j in enumerate(PNs):
             country = set(data1[data1['PART']==j]['VENDOR_COUNTRY'].tolist())
             coty_uni = list(filter(None,country))
+            coty_name = ['Coty'+str(i) for i in range(len(coty_uni))]
             df.loc[i,'PN']=j
-            df.loc[i,'Default_country']=coty_uni[0]
-            df.loc[i,'Vendor_qty']=len(coty_uni)
-            df.loc[i,'Option']=coty_uni
+            df.loc[i,'Vendor_num']=len(coty_uni)
+            df.loc[i,coty_name]=coty_uni
         if len(df[df['PN']==toplevelpn])==0:
-            df.loc[len(df)]=plant_coty
-        else:
-            df[df[df['PN']==toplevelpn]].iloc[0,1:]=plant_coty[1:]
+            lth = len(df)
+            df.loc[lth,'PN']=toplevelpn
+            df.loc[lth,'Vendor_num']=len(plant_coty)
+            coty_name = ['Coty'+str(i) for i in range(len(plant_coty))]
+            df.loc[lth,coty_name]=plant_coty
         return df
 class ProcesEF:
     @staticmethod
