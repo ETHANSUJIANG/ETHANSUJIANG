@@ -191,13 +191,13 @@ class Twodfconcat:
         if index:
             if 'PART' in target.columns:
                 target.index = target['PART']
-            elif 'PART' in target.columns:
-                target.index = target['PART']
+            elif 'PN' in target.columns:
+                target.index = target['PN']
         cols= target.columns
         slice_col = cols[start:]
         lth = source.shape[1]
-        for i,j in enumerate(slice_col):
-            source.insert(lth+i,column=j,value=None)
+        # for i,j in enumerate(slice_col):
+        #     source.insert(lth+i,column=j,value=None)
         if 'PART' in source.columns:
             for k,l in enumerate(source.PART):
                 source.loc[k,slice_col]=target.loc[l,slice_col]
@@ -954,8 +954,6 @@ class RawMaterial:
 
 # Raw = RawMaterial()
 # df_final =Raw.setUp(df_complete)
-# df_final.shape
-# df_final.columns
 
 # df_final.to_excel('data/P7000094258-26_final.xlsx',index=False)
 
@@ -1002,7 +1000,6 @@ class ProcesEF:
 
 # Final_df = ProcesEF.procesEF(df_final, EFe)
 # Final_df.to_excel('data/fi_df.xlsx',index =False)
-# Final_df.columns[-12:]
 
 
 def emissionSum(data):
@@ -1021,8 +1018,6 @@ def emissionSum(data):
 
 # data,total, EF = emissionSum(Final_df)
 # data.to_excel('data/fi_df_P7000073756.xlsx',index =False)
-# print(f'total emission is {total:.0f} kg')
-# print(f' emission factor is {EF:.2f} kg/kg')
 
 def decorator(fun):
     def wrapper(*args,**kargs):
@@ -1043,6 +1038,7 @@ if __name__== '__main__':
     data0 =DataClear.dataClear(data)
     description = data0['PART DESCRIPTION'][0][:35]
     df_toplevelpn,df_purchased,df_production= queryData(data0,PN=PN)
+    #create dataframe of purchased parts and their puchase region
     df_PN_loction = MfgLocation.sourcingPN(df_production,df_purchased)
     # clear the iBOM data drop nan value
     df_toplevelpn =DFClear.dfClear(df_toplevelpn)
