@@ -22,8 +22,7 @@ class LoadingData:
         data = pd.read_excel(path)
         EF_PR = EF_PR = pd.read_excel(r'C:\Users\zhusj\python\Input_data\TFMC/EF_vendor_region.xlsx')
         dfs = pd.read_excel(r'C:\Users\zhusj\python\Input_data\TFMC\Air_Ocea_Road.xlsx',sheet_name=None)
-        road,sea,air,EF= dfs.parse(sheet_name='Roaddistance'),dfs.parse(sheet_name='Seadistance')\
-                        ,dfs.parse(sheet_name='Airportdistance'),dfs.parse(sheet_name='EF')
+        road,sea,air,EF= dfs['Roaddistance'],dfs['Seadistance'],dfs['Airportdistance'],dfs['EF']
         EF_Trans ={'Road':road,'Sea':sea,'Air':air,'EF':EF}
         return data,EF_PR,EF_Trans
 # data = pd.read_excel('data/P1000220410.xlsx')# read BOM data
@@ -1023,11 +1022,27 @@ class TransEmission:
                     source.loc[i,'Vendor_coty']=coty[vendor_ixd]
                 else:
                     source.loc[i,'Vendor_coty']=coty[0]
-            
-            
-        
-
-
+        df_road, df_sea,df_air,df_ef = EF_Trans['road'],EF_Trans['sea'],EF_Trans['air'],EF_Trans['EF']
+        df_sea.index = df_sea['Unnamed: 0']
+        source['Road_EF']=df_ef['Road'][1]
+        source['Air_EF']=df_ef['Air'][1]
+        source['Sea']=df_ef['Sea'][1]
+        for k,l in enumerate(source['PART']):
+            vendor_region = source.loc[k,'Vendor_coty']
+            plant_region = source.loc[k,'TFMC_plant_country']
+            if vendor_region!='':
+                source.loc[i,'Orin_road_airport']=df_road[df_road['Country_code']==vendor_region]['Orin_to_airport'][0]
+                source.loc[i,'Orin_road_seaport']=df_road[df_road['Country_code']==vendor_region]['Orin_to_seaport'][0]
+                source.loc[i,'airport_road_desti']=df_road[df_road['plant_region']==plant_region]['Airport_to_destination'][0]
+                source.loc[i,'sea_road_desti']=df_road[df_road['plant_region']==plant_region]['Seaport_to_destination'][0]
+                source.loc[i,'Sea_dist']=df_sea.loc[vendor_region,plant_region]
+                source.loc[i,'Air_dist']=df_air[(df_air['Country0']==vendor_region)&((df_air['Country1']==plant_region))]['Distance_km'][0]
+            if source.loc[i,'Weight_kg']<10.0:
+                source.loc[i,'Air_label']=1
+                source.loc[i,'Sea_label']=0
+            elif source.loc[i,'Weight_kg']>=10.0:
+                source.loc[i,'Air_label']=0
+                source.loc[i,'Sea_label']=1
 
 
 def emissionSum(data):
