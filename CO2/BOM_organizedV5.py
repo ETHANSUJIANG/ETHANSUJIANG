@@ -990,7 +990,7 @@ class ProcesEF:
         '''EFe is dictionary'''
         for i,j in EFe.items():
             if i =='Country':
-                data[i]='CN'
+                data[i]=''
             else:
                 data[i+'_Mass']=0
         for h in data.index:
@@ -1005,46 +1005,81 @@ class ProcesEF:
 class TransEmission:
     @staticmethod
     def transCal(source:pd.DataFrame,target:pd.DataFrame,EF_Trans,plant_ixd=0,vendor_ixd=0):
-        lth = source.shape[1]
+        target.fillna('',inplace=True)
+        target.index = target['PN']
         for i,j in enumerate(source['PART']):
             if i ==0:
-                coty = target[target['PN']==j]['PN'].tolist()
-                if plant_ixd <=(len(coty)-1):
+                coty = (target.loc[j,].tolist())[2:]
+                num = target.loc[j,'Vendor_num']
+                coty = list(filter(str.isalpha,coty))
+                if plant_ixd <=(num-1):
                     source['TFMC_plant_country']=coty[plant_ixd]
                 else:
                     source['TFMC_plant_country']=coty[0]
                 source.loc[i,'Vendor_coty']=source['TFMC_plant_country'][0]
-            else:
-                coty = target[target['PN']==j]['PN'].tolist()
-                if len(coty)==0:
+            elif i>=1:
+                if j not in target.index:
                     source.loc[i,'Vendor_coty']=''
-                elif vendor_ixd<=(len(coty)-1):
-                    source.loc[i,'Vendor_coty']=coty[vendor_ixd]
-                else:
-                    source.loc[i,'Vendor_coty']=coty[0]
-        df_road, df_sea,df_air,df_ef = EF_Trans['road'],EF_Trans['sea'],EF_Trans['air'],EF_Trans['EF']
+                elif j in target.index:
+                    coty = (target.loc[j,].tolist())[2:]
+                    num = target.loc[j,'Vendor_num']
+                    coty = list(filter(None,coty))
+                    if vendor_ixd<=(num-1):
+                        source.loc[i,'Vendor_coty']=coty[vendor_ixd]
+                    else:
+                        source.loc[i,'Vendor_coty']=coty[0]
+        df_road, df_sea,df_air,df_ef = EF_Trans['Road'],EF_Trans['Sea'],EF_Trans['Air'],EF_Trans['EF']
         df_sea.index = df_sea['Unnamed: 0']
         source['Road_EF']=df_ef['Road'][1]
         source['Air_EF']=df_ef['Air'][1]
-        source['Sea']=df_ef['Sea'][1]
+        source['Sea_EF']=df_ef['Ocean'][1]
         for k,l in enumerate(source['PART']):
             vendor_region = source.loc[k,'Vendor_coty']
             plant_region = source.loc[k,'TFMC_plant_country']
-            if vendor_region!='':
-                source.loc[i,'Orin_road_airport']=df_road[df_road['Country_code']==vendor_region]['Orin_to_airport'][0]
-                source.loc[i,'Orin_road_seaport']=df_road[df_road['Country_code']==vendor_region]['Orin_to_seaport'][0]
-                source.loc[i,'airport_road_desti']=df_road[df_road['plant_region']==plant_region]['Airport_to_destination'][0]
-                source.loc[i,'sea_road_desti']=df_road[df_road['plant_region']==plant_region]['Seaport_to_destination'][0]
-                source.loc[i,'Sea_dist']=df_sea.loc[vendor_region,plant_region]
-                source.loc[i,'Air_dist']=df_air[(df_air['Country0']==vendor_region)&((df_air['Country1']==plant_region))]['Distance_km'][0]
-            if source.loc[i,'Weight_kg']<10.0:
-                source.loc[i,'Air_label']=1
-                source.loc[i,'Sea_label']=0
-            elif source.loc[i,'Weight_kg']>=10.0:
-                source.loc[i,'Air_label']=0
-                source.loc[i,'Sea_label']=1
-
-
+            if k ==0:
+                source.loc[k,'Sea_label']=0
+                source.loc[k,'Air_label']=0
+                source.loc[k,'Orin_road_airport']=0
+                source.loc[k,'Orin_road_seaport']=0
+                source.loc[k,'sea_road_desti']=0
+                source.loc[k,'airport_road_desti']=0
+                source.loc[k,'Sea_dist']=0
+                source.loc[k,'Air_dist']=0
+            elif k>=1:
+                if source.loc[k,'Weight_kg']<10.0:
+                    source.loc[k,'Air_label']=1
+                    source.loc[k,'Sea_label']=0
+                elif source.loc[k,'Weight_kg']>=10.0:
+                    source.loc[k,'Air_label']=0
+                    source.loc[k,'Sea_label']=1
+                if vendor_region=='':
+                    source.loc[k,'Orin_road_airport']=0
+                    source.loc[k,'Orin_road_seaport']=0
+                    source.loc[k,'sea_road_desti']=0
+                    source.loc[k,'sea_road_desti']=0
+                    source.loc[k,'Sea_dist']=0
+                    source.loc[k,'Air_dist']=0
+                elif vendor_region!='':
+                    source.loc[k,'Orin_road_airport']=df_road[df_road['Country_code']==vendor_region]['Orin_to_airport'].iloc[0,]
+                    source.loc[k,'Orin_road_seaport']=df_road[df_road['Country_code']==vendor_region]['Orin_to_seaport'].iloc[0,]
+                    source.loc[k,'airport_road_desti']=df_road[df_road['Country_code']==plant_region]['Airport_to_destination'].iloc[0,]
+                    source.loc[k,'sea_road_desti']=df_road[df_road['Country_code']==plant_region]['Seaport_to_destination'].iloc[0,]
+                    source.loc[k,'Sea_dist']=df_sea.loc[vendor_region,plant_region]
+                    if vendor_region==plant_region:
+                        source.loc[k,'Air_dist']=0
+                    else:
+                        source.loc[k,'Air_dist']=df_air[(df_air['Country0']==vendor_region)&\
+                            (df_air['Country1']==plant_region)]['Distance_km'].iloc[0,]
+            source.loc[k,'Road_emission']=((source.loc[k,'Orin_road_airport']+source.loc[k,'airport_road_desti'])*\
+                source.loc[k,'Air_label']+(source.loc[k,'Orin_road_seaport']+source.loc[k,'sea_road_desti'])*\
+                    source.loc[k,'Sea_label'])*source.loc[k,'Road_EF']*source.loc[k,'Sub_total_qty']*source.loc[k,'Weight_kg']/1000*1.1
+            source.loc[k,'Air_emission']=source.loc[k,'Air_dist']*source.loc[k,'Air_label']*source.loc[k,'Air_EF']*\
+            source.loc[k,'Sub_total_qty']*source.loc[k,'Weight_kg']/1000*1.1
+            source.loc[k,'Sea_emission']= source.loc[k,'Air_dist']*source.loc[k,'Air_label']*source.loc[k,'Air_EF']*\
+            source.loc[k,'Sub_total_qty']*source.loc[k,'Weight_kg']/1000*1.1
+        source['Trans_total']= source['Road_emission'].sum()+source['Air_emission'].sum()+source['Sea_emission'].sum()
+        source['Trans_total'][1:]=''
+        return source
 def emissionSum(data):
     cols = data.columns[-12:]
     data['Pr_sum']=0
@@ -1056,8 +1091,8 @@ def emissionSum(data):
     data['Raw_Total']=data['Raw_sum_metal']+data['Raw_sum_non']
     data['CO2_total_Mass'] = data['Raw_Total'] + data['Pr_total']
     total =sum(data['CO2_total_Mass'])
-    EF = total/(data['Weight_kg'][0]+0.01)
-    return data, total, EF
+    # EF = total/(data['Weight_kg'][0]+0.01)
+    return data, total
 
 # data,total, EF = emissionSum(Final_df)
 # data.to_excel('data/fi_df_P7000073756.xlsx',index =False)
@@ -1095,19 +1130,26 @@ if __name__== '__main__':
     df_Prs =Prs.proccesSet()
     # identify each of PN itself mfg process 
     df_complete= Twodfconcat.combine(data_rawlv,df_Prs,start=0)
+    # calculation transportation and logistic co2 emission
+    df_comp_stran= TransEmission.transCal(df_complete,df_PN_loction,EF_Trans=EF_Transport,plant_ixd=1)
+    TransEmissionTotal =df_comp_stran['Trans_total'][0]
     # concatenate iBOM and process data
     Raw = RawMaterial()
     df_final =Raw.setUp(df_complete)
     data_table = ProcesEF.procesEF(df_final, EFe)
     # sum up each of line co2 emission
-    data_excel, total, EF = emissionSum(data_table)
-    data_excel['Total']= total
-    data_excel['Total'][1:]=np.nan
+    data_excel, proces_total = emissionSum(data_table)
+    EF = (proces_total+TransEmissionTotal)/data_excel['Weight_kg'][0]
+    data_excel['ProcessTotal']= proces_total
+    data_excel['GrandTotal']=proces_total+TransEmissionTotal
+    data_excel['GrandTotal'][1:]=''
+    data_excel['ProcessTotal'][1:]=''
     data_excel['EF'] = EF
-    data_excel['EF'][1:] =np.nan
+    data_excel['EF'][1:] =''
     path = r'C:\Users\zhusj\python\Output_data\TFMC'
     data_excel.to_excel(os.path.join(path,f'{PN}_final_table.xlsx'),index =False)
-    print(f'Per piece {description} {PN} total emission is {total:.0f} kg')
+    df_comp_stran.to_excel(os.path.join(path,f'{PN}_final_table.xlsx'),index =False)
+    print(f'Per piece {description} {PN} mfg process and raw materieal total emission is {proces_total:.0f} kg')
+    print(f'Per piece {description} {PN} T&L is {TransEmissionTotal:.0f} kg')
     print("*"*80)
     print(f'{PN} {description} emission factor is {EF:.2f} kg/kg')
-    
